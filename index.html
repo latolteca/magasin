@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex, nofollow">
+<title>Magasin</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --navy:#1F3864; --navy2:#2E4A7D; --bg:#F3F5F8; --card:#fff; --ink:#1B1F24; --mute:#5F6B7A; --line:#DCE1E8;
+  --acc:#E8590C; --acc2:#C94A06; --ok:#1E8E3E; --warn:#B26A00; --err:#C62828; --back:#0E7C86;
+  --r:14px; --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:12px}
+.top h1{font-size:20px;margin:0;letter-spacing:.5px}
+.top .sub{font-size:12px;opacity:.75}
+.top .grow{flex:1;min-width:0}
+.cartbtn{position:relative;background:rgba(255,255,255,.14);border:0;border-radius:12px;color:#fff;padding:8px 12px;display:flex;align-items:center;gap:6px;font-weight:600}
+.badge{background:var(--acc);color:#fff;border-radius:999px;min-width:22px;height:22px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+main{padding:14px 16px calc(96px + var(--safe-b));max-width:720px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:var(--safe-b)}
+.tabs button{background:none;border:0;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--mute);position:relative}
+.tabs button svg{width:26px;height:26px}
+.tabs button.on{color:var(--navy);font-weight:700}
+.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:var(--r);padding:16px;font-size:19px;font-weight:700;min-height:60px}
+.primary{background:var(--acc);color:#fff}.primary:active{background:var(--acc2)}
+.primary[disabled]{background:#E7B597}
+.navybtn{background:var(--navy);color:#fff}
+.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.small{font-size:14px;padding:10px 12px;min-height:44px;border-radius:10px;font-weight:600}
+.row{display:flex;gap:10px;align-items:center}
+.hint{color:var(--mute);font-size:14px}
+.search{width:100%;border:2px solid var(--line);border-radius:var(--r);padding:14px 14px 14px 44px;font-size:18px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235F6B7A' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center/22px}
+.search:focus{outline:none;border-color:var(--navy)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:15px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.list{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.item{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left}
+.item:last-child{border-bottom:0}
+.item:active{background:#EEF2F7}
+.code{font:700 13px ui-monospace,Menlo,Consolas,monospace;background:#E8EDF5;color:var(--navy);border-radius:6px;padding:3px 6px;white-space:nowrap}
+.des{font-weight:600}
+.meta{font-size:13px;color:var(--mute)}
+.stock{margin-left:auto;text-align:right;font-weight:700;white-space:nowrap}
+.stock small{display:block;font-weight:400;font-size:11px;color:var(--mute)}
+.empty{text-align:center;color:var(--mute);padding:28px 10px}
+h2{font-size:18px;margin:18px 0 10px}
+.sec{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);margin:18px 0 8px;font-weight:700}
+/* feuille article */
+.veil{position:fixed;inset:0;background:rgba(10,20,40,.45);z-index:40;display:none}
+.veil.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + var(--safe-b));transform:translateY(105%);transition:transform .2s;max-width:720px;margin:0 auto;max-height:92vh;overflow:auto}
+.sheet.on{transform:none}
+.sheet .des{font-size:20px;margin:6px 0 4px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#EEF1F5;border-radius:12px;padding:4px;margin:14px 0}
+.seg button{border:0;background:none;border-radius:9px;padding:12px;font-weight:700;font-size:16px;color:var(--mute)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg button.on.out{color:var(--acc2)}.seg button.on.in{color:var(--back)}
+.qty{display:grid;grid-template-columns:72px 1fr 72px;gap:10px;align-items:center}
+.qty button{height:72px;border-radius:16px;border:0;background:#E8EDF5;font-size:36px;font-weight:700;color:var(--navy)}
+.qty input{height:72px;text-align:center;font-size:34px;font-weight:800;border:2px solid var(--line);border-radius:16px;width:100%}
+.quick{display:flex;gap:8px;margin:10px 0 16px}
+.quick button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 0;font-weight:700}
+/* panier */
+.line{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.line:last-child{border-bottom:0}
+.line .grow{flex:1;min-width:0}
+.mini{display:flex;align-items:center;gap:6px}
+.mini button{width:40px;height:40px;border-radius:10px;border:0;background:#E8EDF5;font-size:22px;font-weight:700;color:var(--navy)}
+.mini input{width:58px;height:40px;text-align:center;font-weight:800;font-size:18px;border:1px solid var(--line);border-radius:10px}
+.x{border:0;background:none;color:var(--err);font-size:26px;width:40px;height:40px}
+.tag{font-size:11px;font-weight:800;border-radius:6px;padding:2px 6px;text-transform:uppercase}
+.tag.out{background:#FDE7DC;color:var(--acc2)}.tag.in{background:#D9F1F2;color:var(--back)}
+.tag.todo{background:#FFF1CC;color:var(--warn)}.tag.done{background:#E2F4E6;color:var(--ok)}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.pick button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:14px 10px;font-weight:700;font-size:16px;text-align:center;min-height:56px;word-break:break-word}
+.pick button.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.field{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:17px;background:#fff}
+.field:focus{outline:none;border-color:var(--navy)}
+textarea.field{min-height:120px;font:13px ui-monospace,Menlo,Consolas,monospace}
+/* divers */
+.toast{position:fixed;left:50%;bottom:calc(92px + var(--safe-b));transform:translateX(-50%) translateY(20px);background:#1B1F24;color:#fff;padding:12px 18px;border-radius:12px;z-index:60;opacity:0;transition:.2s;pointer-events:none;max-width:90vw;text-align:center;font-weight:600}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.done{position:fixed;inset:0;z-index:70;background:var(--ok);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:10px}
+.done.on{display:flex}
+.done svg{width:110px;height:110px}
+.done b{font-size:26px}
+.scan{position:fixed;inset:0;z-index:80;background:#000;display:none;flex-direction:column}
+.scan.on{display:flex}
+.scan video{flex:1;width:100%;object-fit:cover}
+.scan .frame{position:absolute;left:50%;top:45%;width:64vw;height:64vw;max-width:340px;max-height:340px;transform:translate(-50%,-50%);border:4px solid #fff;border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+.scan .bar{position:absolute;left:0;right:0;bottom:0;padding:18px 16px calc(18px + var(--safe-b));display:flex;flex-direction:column;gap:10px;align-items:center;color:#fff}
+.banner{background:#FFF4D6;border:1px solid #F0D58C;color:#6B4E00;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:15px}
+.banner.ok{background:#E2F4E6;border-color:#A8D8B4;color:#1C5B2C}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.kv b{color:var(--mute);font-weight:600}
+.stack>*+*{margin-top:10px}
+.pad{padding:0 2px}
+.dangerbtn{background:#fff;border:1px solid #F1B5B5;color:var(--err)}
+/* étiquettes */
+#labels{display:none}
+.lbl-page{width:210mm;height:297mm;padding:0;display:grid;grid-template-columns:repeat(3,70mm);grid-template-rows:repeat(8,37.125mm);background:#fff;margin:0 auto 12px;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.lbl{display:flex;gap:2.5mm;align-items:center;padding:2.5mm 3mm;overflow:hidden;border:.2mm dashed #C9CED6;font-family:Arial,sans-serif;color:#000}
+.lbl svg{width:31mm;height:31mm;flex:0 0 31mm}
+.lbl .t{min-width:0;display:flex;flex-direction:column;gap:1mm}
+.lbl .c{font-size:15pt;font-weight:800;color:#1F3864;line-height:1}
+.lbl .d{font-size:7.5pt;font-weight:700;line-height:1.15;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lbl .e{font-size:6.5pt;color:#444}
+.labwrap{overflow:auto;background:#E5E8EE;padding:12px;border-radius:12px}
+.labwrap .lbl-page{transform-origin:top left}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .top,.tabs,main>*:not(#v-etiq),#v-etiq>*:not(.labwrap),.toast{display:none!important}
+  main{padding:0;max-width:none}
+  #v-etiq{display:block!important}
+  .labwrap{padding:0;background:none;overflow:visible}
+  .lbl-page{box-shadow:none;margin:0!important;page-break-after:always;break-after:page;transform:none!important}
+  .lbl-page:last-child{page-break-after:auto;break-after:auto}
+  .lbl{border-color:#E3E6EA}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="grow">
+    <h1 id="appTitle">MAGASIN</h1>
+    <div class="sub" id="listInfo"></div>
+  </div>
+  <button class="cartbtn" onclick="go('panier')" aria-label="Panier">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>
+    <span class="badge" id="cartCount">0</span>
+  </button>
+</header>
+
+<main>
+  <!-- PRENDRE -->
+  <section class="view on" id="v-prendre">
+    <div id="pendingBanner"></div>
+    <button class="big navybtn" id="scanBtn" onclick="startScan()" style="display:none">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>
+      Scanner le QR d'un bac
+    </button>
+    <div class="card hint" id="scanHint" style="display:none">Pour aller plus vite : scannez le QR code du bac avec l'<b>appareil photo</b> du téléphone, la fiche s'ouvre directement.</div>
+    <div style="height:12px"></div>
+    <input class="search" id="q" type="search" placeholder="Chercher : disque 125, foret 8, gants…" autocomplete="off" oninput="renderList()">
+    <div class="chips" id="shelves"></div>
+    <div id="results"></div>
+  </section>
+
+  <!-- PANIER -->
+  <section class="view" id="v-panier">
+    <h2 style="margin-top:4px">Panier</h2>
+    <div id="cartList"></div>
+    <div id="cartForm">
+      <div class="sec">Pour quel chantier ?</div>
+      <div class="pick" id="chaPick"></div>
+      <div class="row" style="margin-top:8px"><input class="field" id="chaOther" placeholder="Autre chantier…" oninput="pickCha(null)"></div>
+      <div class="sec">Qui prend ?</div>
+      <div class="pick" id="quiPick"></div>
+      <div class="row" style="margin-top:8px"><input class="field" id="quiOther" placeholder="Autre nom…" oninput="pickQui(null)"></div>
+      <div class="sec">Commentaire (facultatif)</div>
+      <input class="field" id="com" maxlength="120" placeholder="ex. kit camion, casse…">
+      <div style="height:16px"></div>
+      <button class="big primary" id="validBtn" onclick="validate()">Valider</button>
+      <div style="height:10px"></div>
+      <button class="big ghost small" onclick="clearCart()">Vider le panier</button>
+    </div>
+  </section>
+
+  <!-- HISTORIQUE -->
+  <section class="view" id="v-histo">
+    <div class="row" style="justify-content:space-between;margin:4px 0 10px">
+      <h2 style="margin:0">Historique</h2>
+      <div class="chips" style="padding:0"><button class="chip on" id="hfTodo" onclick="histFilter='todo';renderHist()">À envoyer</button><button class="chip" id="hfAll" onclick="histFilter='all';renderHist()">Tout</button></div>
+    </div>
+    <div id="histList"></div>
+  </section>
+
+  <!-- PLUS -->
+  <section class="view" id="v-plus">
+    <h2 style="margin-top:4px">Envoyer au bureau</h2>
+    <div class="card stack" id="sendCard"></div>
+    <h2>Outils</h2>
+    <div class="stack">
+      <button class="big ghost" onclick="openSettings()">Réglages et listes <span class="hint">(code)</span></button>
+      <button class="big ghost" onclick="openLabels()">Étiquettes QR à imprimer</button>
+      <button class="big ghost" onclick="go('aide')">Mode d'emploi</button>
+    </div>
+  </section>
+
+  <!-- REGLAGES -->
+  <section class="view" id="v-reglages">
+    <div class="row" style="margin:4px 0 6px"><button class="chip" onclick="go('plus')">‹ Retour</button><h2 style="margin:0 0 0 6px">Réglages</h2></div>
+    <div class="sec">Listes (articles, chantiers, noms)</div>
+    <div class="card stack">
+      <div class="kv" id="listStats"></div>
+      <div class="hint">Coller ici le bloc de l'onglet <b>TELEPHONE</b> du classeur Excel (ou choisir le fichier CSV de cet onglet).</div>
+      <textarea class="field" id="importTxt" placeholder="#MAGASIN|15/11/2026&#10;ART|E1-001|WD40 500ML|ÉTAGÈRE 1|PCS|500 ml|6&#10;…"></textarea>
+      <div class="row"><button class="big navybtn small" style="flex:1" onclick="doImport(document.getElementById('importTxt').value)">Importer le texte</button>
+        <label class="big ghost small" style="flex:1;margin:0">Fichier…<input type="file" accept=".csv,.txt,text/plain,text/csv" style="display:none" onchange="importFile(this)"></label></div>
+    </div>
+    <div class="sec">Personnel</div>
+    <div class="card stack"><div id="perList"></div>
+      <div class="row"><input class="field" id="perNew" placeholder="Nom à ajouter"><button class="big navybtn small" style="width:auto" onclick="addTo('personnel','perNew')">Ajouter</button></div></div>
+    <div class="sec">Chantiers</div>
+    <div class="card stack"><div id="chaList"></div>
+      <div class="row"><input class="field" id="chaNew" placeholder="Chantier à ajouter"><button class="big navybtn small" style="width:auto" onclick="addTo('chantiers','chaNew')">Ajouter</button></div></div>
+    <div class="sec">Envoi</div>
+    <div class="card stack">
+      <label class="hint" for="mail">Adresse e-mail du bureau (pour le bouton E-mail)</label>
+      <input class="field" id="mail" type="email" placeholder="bureau@entreprise.fr" onchange="S.set.email=this.value.trim();save()">
+      <label class="hint" for="appName">Nom affiché en haut de l'écran</label>
+      <input class="field" id="appName" placeholder="MAGASIN" onchange="S.set.title=this.value.trim();save();renderTop()">
+    </div>
+    <div class="sec">Sécurité et sauvegarde</div>
+    <div class="card stack">
+      <div class="row"><input class="field" id="pinNew" inputmode="numeric" maxlength="8" placeholder="Nouveau code (4 à 8 chiffres)"><button class="big navybtn small" style="width:auto" onclick="changePin()">Changer</button></div>
+      <button class="big ghost small" onclick="backup()">Télécharger une sauvegarde complète</button>
+      <label class="big ghost small" style="margin:0">Restaurer une sauvegarde…<input type="file" accept=".json,application/json" style="display:none" onchange="restore(this)"></label>
+      <button class="big ghost small" onclick="purge()">Supprimer les lignes envoyées de plus de 90 jours</button>
+      <button class="big dangerbtn small" onclick="wipe()">Tout effacer sur ce téléphone</button>
+    </div>
+  </section>
+
+  <!-- ETIQUETTES -->
+  <section class="view" id="v-etiq">
+    <div class="row" style="margin:4px 0 6px"><button class="chip" onclick="go('plus')">‹ Retour</button><h2 style="margin:0 0 0 6px">Étiquettes QR</h2></div>
+    <div class="card stack">
+      <div class="hint">Planches A4 de 24 étiquettes 70 × 37 mm (3 × 8), autocollantes ou papier. À imprimer depuis un ordinateur, échelle 100 %, sans marges.</div>
+      <label class="hint" for="labShelf">Emplacement</label>
+      <select class="field" id="labShelf" onchange="renderLabels()"></select>
+      <label class="hint" for="labBase">Adresse de l'appli contenue dans le QR</label>
+      <input class="field" id="labBase" onchange="S.set.base=this.value.trim();save();renderLabels()">
+      <div class="hint" id="labWarn"></div>
+      <button class="big primary" onclick="window.print()">Imprimer</button>
+    </div>
+    <div class="labwrap" id="labels"></div>
+  </section>
+
+  <!-- AIDE -->
+  <section class="view" id="v-aide">
+    <div class="row" style="margin:4px 0 6px"><button class="chip" onclick="go('plus')">‹ Retour</button><h2 style="margin:0 0 0 6px">Mode d'emploi</h2></div>
+    <div class="card stack">
+      <div><b>1. Je prends du matériel</b><br>Scanner le QR du bac (ou chercher l'article), choisir la quantité, « Ajouter au panier ». Recommencer pour chaque article.</div>
+      <div><b>2. Je valide</b><br>Panier → choisir le chantier et son nom → Valider. C'est enregistré, même sans réseau.</div>
+      <div><b>3. Je rapporte</b><br>Même chose en choisissant « Je rapporte » sur la fiche article.</div>
+      <div><b>Erreur ?</b><br>Historique → supprimer la ligne (possible tant qu'elle n'est pas envoyée).</div>
+      <div><b>Le soir (responsable)</b><br>Plus → Envoyer au bureau → Partager le fichier (mail…) → « Marquer comme envoyé ». Au bureau : ouvrir le fichier, copier les lignes et les coller dans l'onglet MOUVEMENTS, colonne A, première ligne vide.</div>
+      <div class="hint">Le stock affiché est indicatif : stock du dernier import moins les prises saisies depuis.</div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button class="on" data-v="prendre" onclick="go('prendre')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>Prendre</button>
+  <button data-v="panier" onclick="go('panier')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>Panier<span class="badge" id="cartCount2" style="display:none">0</span></button>
+  <button data-v="histo" onclick="go('histo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historique</button>
+  <button data-v="plus" onclick="go('plus')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Plus<span class="badge" id="sendCount" style="display:none;background:#B26A00">0</span></button>
+</nav>
+
+<div class="veil" id="veil" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+<div class="done" id="done" onclick="this.classList.remove('on')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m7 12.5 3.2 3.2L17 9"/></svg>
+  <b>Enregistré</b><div id="doneTxt"></div>
+</div>
+<div class="scan" id="scan">
+  <video id="video" playsinline muted></video>
+  <div class="frame"></div>
+  <div class="bar"><div>Visez le QR code du bac</div><button class="big ghost" style="max-width:340px" onclick="stopScan()">Fermer</button></div>
+</div>
+
+<script>
+/* Encodeur QR minimal (mode octet, versions 1 à 6, correction M). */
+var QR = (function () {
+  var ECC_PER_BLOCK = [-1, 10, 16, 26, 18, 24, 16];   // niveau M
+  var NUM_BLOCKS    = [-1, 1, 1, 1, 2, 2, 4];         // niveau M
+  var FORMAT_M = 0;
+
+  function gfMul(x, y) {
+    var z = 0;
+    for (var i = 7; i >= 0; i--) {
+      z = (z << 1) ^ ((z >>> 7) * 0x11D);
+      z ^= ((y >>> i) & 1) * x;
+    }
+    return z & 0xFF;
+  }
+  function rsDivisor(deg) {
+    var r = [];
+    for (var i = 0; i < deg - 1; i++) r.push(0);
+    r.push(1);
+    var root = 1;
+    for (var i = 0; i < deg; i++) {
+      for (var j = 0; j < r.length; j++) {
+        r[j] = gfMul(r[j], root);
+        if (j + 1 < r.length) r[j] ^= r[j + 1];
+      }
+      root = gfMul(root, 0x02);
+    }
+    return r;
+  }
+  function rsRemainder(data, div) {
+    var r = div.map(function () { return 0; });
+    data.forEach(function (b) {
+      var f = b ^ r.shift();
+      r.push(0);
+      div.forEach(function (c, i) { r[i] ^= gfMul(c, f); });
+    });
+    return r;
+  }
+  function rawModules(v) {
+    var r = (16 * v + 128) * v + 64;
+    if (v >= 2) {
+      var na = Math.floor(v / 7) + 2;
+      r -= (25 * na - 10) * na - 55;
+      if (v >= 7) r -= 36;
+    }
+    return r;
+  }
+  function dataCodewords(v) {
+    return Math.floor(rawModules(v) / 8) - ECC_PER_BLOCK[v] * NUM_BLOCKS[v];
+  }
+  function utf8(s) {
+    return Array.prototype.slice.call(new TextEncoder().encode(s));
+  }
+  function alignPos(v) {
+    if (v === 1) return [];
+    var na = Math.floor(v / 7) + 2, size = v * 4 + 17;
+    var step = Math.ceil((v * 4 + 4) / (na * 2 - 2)) * 2;
+    var res = [6];
+    for (var i = 0, pos = size - 7; i < na - 1; i++, pos -= step) res.splice(1, 0, pos);
+    return res;
+  }
+
+  function encode(text) {
+    var bytes = utf8(text), v;
+    for (v = 1; v <= 6; v++) if (4 + 8 + bytes.length * 8 <= dataCodewords(v) * 8) break;
+    if (v > 6) throw new Error("Texte trop long pour le QR code (" + bytes.length + " octets)");
+    var cap = dataCodewords(v) * 8, bits = [];
+    function push(val, len) { for (var i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+    push(4, 4); push(bytes.length, 8);
+    bytes.forEach(function (b) { push(b, 8); });
+    push(0, Math.min(4, cap - bits.length));
+    push(0, (8 - bits.length % 8) % 8);
+    for (var pad = 0xEC; bits.length < cap; pad ^= 0xEC ^ 0x11) push(pad, 8);
+    var data = [];
+    for (var i = 0; i < bits.length; i += 8) {
+      var b = 0; for (var k = 0; k < 8; k++) b = (b << 1) | bits[i + k]; data.push(b);
+    }
+    // blocs + correction d'erreur
+    var nb = NUM_BLOCKS[v], ecl = ECC_PER_BLOCK[v], raw = Math.floor(rawModules(v) / 8);
+    var nShort = nb - raw % nb, shortLen = Math.floor(raw / nb), div = rsDivisor(ecl), blocks = [];
+    for (var i = 0, k = 0; i < nb; i++) {
+      var dat = data.slice(k, k + shortLen - ecl + (i < nShort ? 0 : 1));
+      k += dat.length;
+      var ecc = rsRemainder(dat, div);
+      if (i < nShort) dat.push(0);
+      blocks.push(dat.concat(ecc));
+    }
+    var cw = [];
+    for (var i = 0; i < blocks[0].length; i++)
+      blocks.forEach(function (bl, j) { if (i !== shortLen - ecl || j >= nShort) cw.push(bl[i]); });
+
+    // matrice
+    var size = v * 4 + 17, m = [], fn = [];
+    for (var y = 0; y < size; y++) { m.push(new Array(size).fill(false)); fn.push(new Array(size).fill(false)); }
+    function setF(x, y, d) { m[y][x] = d; fn[y][x] = true; }
+    for (var i = 0; i < size; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+    [[3, 3], [size - 4, 3], [3, size - 4]].forEach(function (p) {
+      for (var dy = -4; dy <= 4; dy++) for (var dx = -4; dx <= 4; dx++) {
+        var d = Math.max(Math.abs(dx), Math.abs(dy)), xx = p[0] + dx, yy = p[1] + dy;
+        if (xx >= 0 && xx < size && yy >= 0 && yy < size) setF(xx, yy, d !== 2 && d !== 4);
+      }
+    });
+    var ap = alignPos(v), na = ap.length;
+    for (var i = 0; i < na; i++) for (var j = 0; j < na; j++) {
+      if ((i === 0 && j === 0) || (i === 0 && j === na - 1) || (i === na - 1 && j === 0)) continue;
+      for (var dy = -2; dy <= 2; dy++) for (var dx = -2; dx <= 2; dx++)
+        setF(ap[i] + dx, ap[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }
+    function drawFormat(mask) {
+      var d = (FORMAT_M << 3) | mask, rem = d;
+      for (var i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      var b = ((d << 10) | rem) ^ 0x5412;
+      function bit(i) { return ((b >>> i) & 1) !== 0; }
+      for (var i = 0; i <= 5; i++) setF(8, i, bit(i));
+      setF(8, 7, bit(6)); setF(8, 8, bit(7)); setF(7, 8, bit(8));
+      for (var i = 9; i < 15; i++) setF(14 - i, 8, bit(i));
+      for (var i = 0; i < 8; i++) setF(size - 1 - i, 8, bit(i));
+      for (var i = 8; i < 15; i++) setF(8, size - 15 + i, bit(i));
+      setF(8, size - 8, true);
+    }
+    drawFormat(0);
+    var idx = 0;
+    for (var right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (var vert = 0; vert < size; vert++) for (var j = 0; j < 2; j++) {
+        var x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - vert : vert;
+        if (!fn[y][x] && idx < cw.length * 8) { m[y][x] = ((cw[idx >>> 3] >>> (7 - (idx & 7))) & 1) === 1; idx++; }
+      }
+    }
+    function maskFn(k, x, y) {
+      switch (k) {
+        case 0: return (x + y) % 2 === 0;
+        case 1: return y % 2 === 0;
+        case 2: return x % 3 === 0;
+        case 3: return (x + y) % 3 === 0;
+        case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
+        case 5: return x * y % 2 + x * y % 3 === 0;
+        case 6: return (x * y % 2 + x * y % 3) % 2 === 0;
+        default: return ((x + y) % 2 + x * y % 3) % 2 === 0;
+      }
+    }
+    function applyMask(k) {
+      for (var y = 0; y < size; y++) for (var x = 0; x < size; x++)
+        if (!fn[y][x] && maskFn(k, x, y)) m[y][x] = !m[y][x];
+    }
+    function penalty() {
+      var p = 0, dark = 0;
+      for (var y = 0; y < size; y++) {
+        for (var dir = 0; dir < 2; dir++) {
+          var run = 1;
+          for (var x = 1; x < size; x++) {
+            var a = dir ? m[x][y] : m[y][x], b = dir ? m[x - 1][y] : m[y][x - 1];
+            if (a === b) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1;
+          }
+        }
+        for (var x = 0; x < size; x++) {
+          if (m[y][x]) dark++;
+          if (y < size - 1 && x < size - 1 && m[y][x] === m[y][x + 1] && m[y][x] === m[y + 1][x] && m[y][x] === m[y + 1][x + 1]) p += 3;
+        }
+      }
+      var total = size * size;
+      p += Math.floor(Math.abs(dark * 20 - total * 10) / total) * 10;
+      return p;
+    }
+    var best = 0, bestP = Infinity;
+    for (var k = 0; k < 8; k++) {
+      applyMask(k); drawFormat(k);
+      var pp = penalty();
+      if (pp < bestP) { bestP = pp; best = k; }
+      applyMask(k);
+    }
+    applyMask(best); drawFormat(best);
+    return m;
+  }
+
+  function svg(text, px) {
+    var m = encode(text), n = m.length, q = 2, s = n + q * 2, d = "";
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++)
+      if (m[y][x]) d += "M" + (x + q) + " " + (y + q) + "h1v1h-1z";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + s + " " + s + '"' +
+      (px ? ' width="' + px + '" height="' + px + '"' : "") +
+      ' shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  }
+  return { encode: encode, svg: svg };
+})();
+
+
+</script>
+<script>
+"use strict";
+var DEFAULT = {"date":"01/07/2025","articles":[{"c":"E1-001","d":"WD40 500ML","e":"ÉTAGÈRE 1","u":"PCS","k":"500 ml","s":6},{"c":"E1-002","d":"PRIMAIRE D'ACCROCHE CLEANER","e":"ÉTAGÈRE 1","u":"PCS","k":"1 L","s":2},{"c":"E1-003","d":"COLLE PVC GEL","e":"ÉTAGÈRE 1","u":"PCS","k":"250 ml","s":5},{"c":"E1-004","d":"HTA FUSION POLYMERE SOUDURE","e":"ÉTAGÈRE 1","u":"PCS","k":"1 L","s":2},{"c":"E1-005","d":"ÉPONGE QUALITÉ 160*110*60","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-006","d":"BANDE À JOINT ARMÉE","e":"ÉTAGÈRE 1","u":"PCS","k":"30 m","s":1},{"c":"E1-007","d":"MASTIC JOINT SOLS SIKAFLEX","e":"ÉTAGÈRE 1","u":"PCS","k":"300 ml","s":11},{"c":"E1-008","d":"TRACEUR FLUO ORANGE","e":"ÉTAGÈRE 1","u":"PCS","k":"500 ml","s":27},{"c":"E1-009","d":"COLLIER DE SERRAGE DE CLOTURE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":127},{"c":"E1-010","d":"ROUE POUR CLOTURE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-011","d":"GRAISSE MULTISERVICE","e":"ÉTAGÈRE 1","u":"PCS","k":"400 g","s":2},{"c":"E1-012","d":"BANDE AJOURÉE 056061","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-013","d":"TAMIS H16-85H - BOITE DE 50","e":"ÉTAGÈRE 1","u":"BTE","k":"","s":1},{"c":"E1-014","d":"MASTIC COLLE - PU901","e":"ÉTAGÈRE 1","u":"PCS","k":"310 ml","s":13},{"c":"E1-015","d":"SILICONE MASTIC BLANC BRILLANT","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":3},{"c":"E1-016","d":"RÉSINE MULTIMAX SPIT UNIVERSAL","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":3},{"c":"E1-017","d":"CMIX PLUS SPIT RÉSINE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":12},{"c":"E1-018","d":"MASTIC COLLE SANITAIRE","e":"ÉTAGÈRE 1","u":"PCS","k":"310 ml","s":1},{"c":"E1-019","d":"MOUSSE POLYURÉTHANE RÉSISTANTE FEU PISTOLABLE","e":"ÉTAGÈRE 1","u":"PCS","k":"750 ml","s":2},{"c":"E1-020","d":"MOUSSE POLYURÉTHANE PISTOLABLE","e":"ÉTAGÈRE 1","u":"PCS","k":"750 ml","s":10},{"c":"E1-021","d":"MASQUE COVID JETABLE PAQUET DE 50","e":"ÉTAGÈRE 1","u":"BTE","k":"","s":8},{"c":"E1-022","d":"MASQUE AIRFIT - BTE 10","e":"ÉTAGÈRE 1","u":"BTE","k":"","s":2},{"c":"E1-023","d":"BOUCHON ULTRA FIT - BTE 50","e":"ÉTAGÈRE 1","u":"BTE","k":"","s":1},{"c":"E1-024","d":"CARTOUCHE FILTRE POUSSIÈRE RÉF 63084085","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":6},{"c":"E1-025","d":"PAPIER WC","e":"ÉTAGÈRE 1","u":"LOT","k":"Lot de 2","s":8},{"c":"E1-026","d":"GANTS ROUGE PVC 36CM TAILLE 10 RÉF : NYMRISCFTN","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":8},{"c":"E1-027","d":"POUDRE À TRACER","e":"ÉTAGÈRE 1","u":"PCS","k":"400 ml","s":3},{"c":"E1-028","d":"ULTIBAT COLORANT BÉTON GRIS FONCÉ NOIR 1932880","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-029","d":"ANTIGEL POUDRE ADJUVANT BÉTONNAGE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":8},{"c":"E1-030","d":"PETIT SCOTCH ISOLANTS ROUGE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-031","d":"PETIT SCOTCH ISOLANTS JAUNE VERTS","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-032","d":"PETIT SCOTCH ISOLANTS BLEU","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-033","d":"PETIT SCOTCH ISOLANTS BLANC","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-034","d":"SCOTCH ORANGE 33x50","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":31},{"c":"E1-035","d":"BANDELETTE CORDE BLANCHE 8MM - 5 MÈTRES","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":1},{"c":"E1-036","d":"SAVON BIDON WOOD POWER - 5L","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":7},{"c":"E1-037","d":"SAVON PERLE - 5L","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":1},{"c":"E1-038","d":"RECHARGE SAVON ORANGE - 2L","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":3},{"c":"E1-039","d":"RECHARGE SAVON VERT - 2L","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":1},{"c":"E1-040","d":"DÉGRAISSANT AEXALT VAPO","e":"ÉTAGÈRE 1","u":"PCS","k":"750 ml","s":1},{"c":"E1-041","d":"SAC POUBELLE 130L DE 20 SACS","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-042","d":"GANTS DE PROTECTION ROUGE - T9 - LOT DE 10 PAIRES","e":"ÉTAGÈRE 1","u":"PAQUET","k":"","s":11},{"c":"E1-043","d":"GANTS DE PROTECTION ROUGE - T10 - LOT DE 10 PAIRES","e":"ÉTAGÈRE 1","u":"PAQUET","k":"","s":11},{"c":"E1-044","d":"ANTI-BRUIT CASQUE HS40P3","e":"ÉTAGÈRE 1","u":"BTE","k":"","s":3},{"c":"E1-045","d":"LUNETTE INCOLORE OPTIMALE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":2},{"c":"E1-046","d":"LUNETTE APRUN SOLAIRE","e":"ÉTAGÈRE 1","u":"PCS","k":"","s":7},{"c":"E2-001","d":"POCHETTE POUR PLAN PETIT FORMAT","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":2},{"c":"E2-002","d":"POCHETTE POUR PLAN GRAND FORMAT","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-003","d":"ENROULEURS","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":2},{"c":"E2-004","d":"PANNEAUX SIGNALISATION - INTERDICTION","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":22},{"c":"E2-005","d":"DISQUE MASTER UTM METAL - DIAM 350","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-006","d":"DISQUE SURFACADE - DIAM 180","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":5},{"c":"E2-007","d":"LAME SCIE CIRCULAIRE - DIAM 190","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":7},{"c":"E2-008","d":"DISQUE MASTER UDM - DIAM 230","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":7},{"c":"E2-009","d":"DISQUE MASTER UDM - DIAM125","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":7},{"c":"E2-010","d":"DISQUE À TRONÇONNER - DIAM 125 TYROLIT","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":25},{"c":"E2-011","d":"DISQUE À TRONÇONNER - DIAM 125","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":25},{"c":"E2-012","d":"DISQUE À TRONÇONNER - TYROLIT 230x3","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":50},{"c":"E2-013","d":"LAME SCIE SABRE51155 CHC","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-014","d":"LAME CUTTER 25MM - PACK DE 10","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":6},{"c":"E2-015","d":"CUTTER","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-016","d":"BOBINES ROSE DRYSS","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":5},{"c":"E2-017","d":"COMPO. POITROLLE DIAGER 111C","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-018","d":"SEAU BOBINEAU 20KG","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-019","d":"TERRADALL FIX SEAU 60MM","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":0.5},{"c":"E2-020","d":"COLSON / COLRINING - BTE 100","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-021","d":"BOBINE FILS LIGATUREUSE","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":60},{"c":"E2-022","d":"TIGE FILETÉE DIAM 8","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":10},{"c":"E2-023","d":"TIGE FILETÉE DIAM 16","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-024","d":"SEAU PEINTURE 15L BLANCHE","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-025","d":"FORET 5x50","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":3},{"c":"E2-026","d":"FORET 6x100","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-027","d":"FORET 8x100","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-028","d":"FORET 10x150","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":4},{"c":"E2-029","d":"FORET 12x150","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":8},{"c":"E2-030","d":"FORET 14x200","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":2},{"c":"E2-031","d":"FORET 6x150","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":14},{"c":"E2-032","d":"FORET 8x100","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":7},{"c":"E2-033","d":"FORET 8x200","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":5},{"c":"E2-034","d":"FORET 10x200","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":11},{"c":"E2-035","d":"FORET 12x200","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":6},{"c":"E2-036","d":"PIERRE AFFÛTAGE GRAIN 36","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":1},{"c":"E2-037","d":"DOUBLE IMPACT FACOM NS-27 LA","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":2},{"c":"E2-038","d":"MÈTRE RUBAN 5M","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":3},{"c":"E2-039","d":"MÈTRE RUBAN 8M","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":4},{"c":"E2-040","d":"CRAYON VERT","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":10},{"c":"E2-041","d":"CRAYON ROUGE","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":2},{"c":"E2-042","d":"MINE POUR CRAYON PICADRY 4020/SB","e":"ÉTAGÈRE 2","u":"BTE","k":"","s":1},{"c":"E2-043","d":"CADENAS CODE","e":"ÉTAGÈRE 2","u":"PCS","k":"","s":4},{"c":"E3-001","d":"BOÎTE À CLÉS CYLINDRE 30x30","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":1},{"c":"E3-002","d":"TRACEUR CORDO VERT","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":9},{"c":"E3-003","d":"VIS M12 PAR 40","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":25},{"c":"E3-004","d":"VIS M10 PAR 50","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":60},{"c":"E3-005","d":"VIS TERCC 108x120","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":25},{"c":"E3-006","d":"BOULON POELIER 28x60","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":50},{"c":"E3-007","d":"VIS TERCC M8x30","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":100},{"c":"E3-008","d":"VIS METAUX TÊTE FRAISE P23 M6x75","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":150},{"c":"E3-009","d":"VIS PLACO 90","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":250},{"c":"E3-010","d":"VIS AUTO PERCEUSE 80x45 6 PANS","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":100},{"c":"E3-011","d":"VIS AUTO PERCEUSE 6x3x45 6 PANS","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":150},{"c":"E3-012","d":"VIS BOIS 7x60","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":100},{"c":"E3-013","d":"RONDELLE EXTRA LARGE DIAM 10","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":30},{"c":"E3-014","d":"RONDELLE MOYENNE DIAM 10","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":80},{"c":"E3-015","d":"RONDELLE EXTRA LARGE DIAM 5","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":50},{"c":"E3-016","d":"VIS AUTO PERCEUSE TÊTE HEXAGONALE 4x2x12,7 - BTE 500","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":0.5},{"c":"E3-017","d":"ENTONNOIR ORANGE","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":1},{"c":"E3-018","d":"ÉCROU M20 INOX","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":20},{"c":"E3-019","d":"RONDELLE PLAQUE MOYENNE M20 INOX","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":20},{"c":"E3-020","d":"ÉCROU 6 PANS M8","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":200},{"c":"E3-021","d":"ÉCROU INDESSERRABLE M13","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":60},{"c":"E3-022","d":"ÉCROU INDESSERRABLE M8","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":50},{"c":"E3-023","d":"ÉCROU 6 PANS M16","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":25},{"c":"E3-024","d":"ÉCROU PAPILLONS M6","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":50},{"c":"E3-025","d":"VIS TERCC M6 - PAR 20","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":40},{"c":"E3-026","d":"VIS 6 PANS M6 - PAR 25","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":60},{"c":"E3-027","d":"VIS TERCC M6 - PAR 60","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":25},{"c":"E3-028","d":"VIS M16 PAR 50","e":"ÉTAGÈRE 3","u":"PCS","k":"","s":2},{"c":"E4-001","d":"BALAIS CANTONNIER ROUGE","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":2},{"c":"E4-002","d":"RÂTEAU","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":4},{"c":"E4-003","d":"PELLE RONDE 25","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-004","d":"BALAIS COCO 60 CM","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-005","d":"BALAIS D'ATELIER 80CM","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":3},{"c":"E4-006","d":"RACLETTE 44CM","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-007","d":"PIOCHE TERRASSIER 2KG5","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":3},{"c":"E4-008","d":"PETITE PELLE POUSSIÈRE","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-009","d":"COUTEAU À ENDUIRE 60CM","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-010","d":"COUTEAU À ENDUIRE 50CM","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":2},{"c":"E4-011","d":"FICHE ÉLECTRIQUE 220 F","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":2},{"c":"E4-012","d":"FICHE ÉLECTRIQUE 220 M","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-013","d":"PLOMB MAÇON","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":2},{"c":"E4-014","d":"PISTOLET SQUELETTE","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-015","d":"CHEVILLETTE OCTOGONALE 250","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":8},{"c":"E4-016","d":"CISEAU MAÇON 350x16","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E4-017","d":"BROCHE MAÇON 300","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":2},{"c":"E5-001","d":"MACHOIRE CB 2 AL","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-002","d":"MACHOIRE CB 3 AL","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-003","d":"MACHOIRE CB 1 AL","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":2},{"c":"E5-004","d":"BROSSE MÉTALLIQUE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":2},{"c":"E5-005","d":"MARTEAU COFFREUR","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":4},{"c":"E5-006","d":"TENAILLE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":2},{"c":"E5-007","d":"MARTEAU COFFREUR MANCHE BOIS","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-008","d":"LISSEUSE 70CM ORANGE NOIRE RONDE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-009","d":"LISSEUSE 70CM ORANGE NOIRE POINTUE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-010","d":"ÉQUERRE MAÇON","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-011","d":"GRATOIR ENDUITS POINTE 13/30/01 15x25","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-012","d":"GYROPHARE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-013","d":"EXTINCTEUR 2KG","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":4},{"c":"E5-014","d":"EXTINCTEUR 6 KG","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":2},{"c":"E4-018","d":"COUDE EPE63","e":"ÉTAGÈRE 4","u":"PCS","k":"","s":1},{"c":"E5-015","d":"MANCHON EPE","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":3},{"c":"E5-016","d":"VANNE 4 TOUR MM","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":5},{"c":"E5-017","d":"MANCHON PVC 140","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":8},{"c":"E5-018","d":"COUDE PVC 140 DEGRÉS 45","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":20},{"c":"E5-019","d":"COUDE PVC 140 DEGRÉS 90","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":11},{"c":"E5-020","d":"MANCHON LAITON 3/4","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-021","d":"COUDE PVC","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":8},{"c":"E5-022","d":"TAMPON RÉDUCTION 140x100","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-023","d":"TAMPON RÉDUCTION 100x32","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E5-024","d":"COLLIER 160","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":16},{"c":"E5-025","d":"PVC GRIS 125","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":9},{"c":"E5-026","d":"PVC GRIS 100","e":"ÉTAGÈRE 5","u":"PCS","k":"","s":1},{"c":"E6-001","d":"CHAÎNE 25M","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":5},{"c":"E6-002","d":"SPOTS ÉCLAIRAGE","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-003","d":"LAVE-GLACE ROSE","e":"ÉTAGÈRE 6","u":"PCS","k":"5 L","s":7},{"c":"E6-004","d":"ESSENCE 2 TEMPS","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-005","d":"PIOCHE OPSIAL","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-006","d":"MANCHE DE PELLE 1M10","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":4},{"c":"E6-007","d":"MANCHE DE PELLE OPSIAL","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-008","d":"MANCHE DE PIOCHE OPSIAL","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":3},{"c":"E6-009","d":"MICRO-ONDES 20 L","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-010","d":"RÉDUCTION PVC GRIS 100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":4},{"c":"E6-011","d":"MANCHON PVC 180","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-012","d":"MANCHON RÉDUCTION 190","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":10},{"c":"E6-013","d":"MANCHON RÉDUCTION 2x160","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-014","d":"MANCHON RÉDUCTION 160x125","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-015","d":"MANCHON RÉDUCTION 160x100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-016","d":"MANCHON RÉDUCTION 140x125","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":3},{"c":"E6-017","d":"MANCHON RÉDUCTION 125x100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":7},{"c":"E6-018","d":"CULOTTE DOUBLE 100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":3},{"c":"E6-019","d":"COUDE 45","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-020","d":"GRILLAGE AVERTISSEUR BLEU","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-021","d":"GRILLAGE AVERTISSEUR VERT","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-022","d":"MANCHON HAUTE PRESSION 100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":19},{"c":"E6-023","d":"EVACUATION COUDE PRESSION 100","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-024","d":"PVC PRESSION COUDE 90x32","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":6},{"c":"E6-025","d":"PVC PRESSION COUDE 90x45","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":7},{"c":"E6-026","d":"RACCORD M/M 63","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":6},{"c":"E6-027","d":"VANNE 63","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-028","d":"FOURREAU RACCORD 63","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":20},{"c":"E6-029","d":"SIPHON INOX","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-030","d":"RACCORD FOURREAU 160","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":8},{"c":"E6-031","d":"SOCLE BALISAGE ROUGE ET BLANC","e":"ÉTAGÈRE 6","u":"PCS","k":"1 m","s":3},{"c":"E6-032","d":"MANCHON 32","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":9},{"c":"E6-033","d":"PINCE CROCODILE DEMARRAGE","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-034","d":"ANTI-RETOUR PVC CLAPET","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-035","d":"TAMPON FONTE 40","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":2},{"c":"E6-036","d":"TAMPON FONTE POLYPRO RÉSINE 150","e":"ÉTAGÈRE 6","u":"PCS","k":"","s":1},{"c":"E6-037","d":"RIVET INOX","e":"ÉTAGÈRE 6","u":"BTE","k":"","s":3},{"c":"E7-001","d":"T-SHIRT BLEU MARINE M","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":3},{"c":"E7-002","d":"T-SHIRT BLEU MARINE L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":10},{"c":"E7-003","d":"T-SHIRT BLEU MARINE XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":18},{"c":"E7-004","d":"T-SHIRT BLEU MARINE XXL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":3},{"c":"E7-005","d":"GILET FLUO ORANGE L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":4},{"c":"E7-006","d":"GILET FLUO ORANGE XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":2},{"c":"E7-007","d":"CEINTURE OPSIAL S6311025","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":1},{"c":"E7-008","d":"PANTALON SOMMER T50","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":1},{"c":"E7-009","d":"PANTALON SOMMER T48","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":2},{"c":"E7-010","d":"POLAIRE ANGUA NOIR XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":22},{"c":"E7-011","d":"POLAIRE ANGUA NOIR XXL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":10},{"c":"E7-012","d":"POLAIRE ANGUA NOIR L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":14},{"c":"E7-013","d":"POLAIRE ANGUA NOIR M","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":6},{"c":"E7-014","d":"VESTE SLA B FLOQUÉE SPACE BLEU XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":3},{"c":"E7-015","d":"VESTE SLA B FLOQUÉE SPACE BLEU L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":3},{"c":"E7-016","d":"TOUR DE COU","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":5},{"c":"E7-017","d":"T-SHIRT BLANC XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":17},{"c":"E7-018","d":"T-SHIRT BLANC L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":8},{"c":"E7-019","d":"T-SHIRT BLANC M","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":2},{"c":"E7-020","d":"TENUE PLUIE LEVANT JAUNE XL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":4},{"c":"E7-021","d":"TENUE PLUIE LEVANT JAUNE XXL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":3},{"c":"E7-022","d":"JUGULAIRES 4 POINTS POUR CASQUE","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":5},{"c":"E7-023","d":"PULVERISATEUR 10L","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":1},{"c":"E7-024","d":"CAGOULE DE SOUDURE OPSIAL","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":1},{"c":"E7-025","d":"ÉCHELLE TELESCOPIQUE 13M","e":"ÉTAGÈRE 7","u":"PCS","k":"","s":1},{"c":"E8-001","d":"POINTE ACIER 70","e":"ÉTAGÈRE 8","u":"PCS","k":"1 kg","s":1},{"c":"E8-002","d":"TOPCON 16x150","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":22},{"c":"E8-003","d":"TOPCON 10x120","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":70},{"c":"E8-004","d":"TOPCON 10x90","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":50},{"c":"E8-005","d":"TOPCON 8x60","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":50},{"c":"E8-006","d":"TOPCON 8x80","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":10},{"c":"E8-007","d":"CHEVILLE METAL ANNEAU M12x100","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":10},{"c":"E8-008","d":"GOUJON M 12x110 FIX3-SPIT","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":16},{"c":"E8-009","d":"FIX Z XTREM A4 GOUJON M12x110 INOX","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":11},{"c":"E8-010","d":"POINTE TÊTE PLATE TP 55","e":"ÉTAGÈRE 8","u":"PCS","k":"5 kg","s":1},{"c":"E8-011","d":"POINTE TÊTE PLATE TP 70","e":"ÉTAGÈRE 8","u":"PCS","k":"15 kg","s":1},{"c":"E8-012","d":"SUPPORT TOFFOBASE NOIR","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":75},{"c":"E8-013","d":"KIT CARRELAGE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":1},{"c":"E8-014","d":"KIT LAVAGE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":1},{"c":"E8-015","d":"BOÎTE À CLÉS GRAND","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":1},{"c":"E8-016","d":"BOÎTE À CLÉS PETIT","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":1},{"c":"E8-017","d":"MANCHE ROULEAU PEINTURE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":10},{"c":"E8-018","d":"ROULEAU NEUF","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":1},{"c":"E8-019","d":"JOINT BENTOBAR + GREEN 20x10MM","e":"ÉTAGÈRE 8","u":"ML","k":"","s":60},{"c":"E8-020","d":"ÉCARTEURS 30MM (ROUE VELO)","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":900},{"c":"E8-021","d":"CÔNES BANCHETTE 18 PLASTIQUE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":35},{"c":"E8-022","d":"PLOTS RÉGLABLE TERRASSE 30MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":25},{"c":"E8-023","d":"BOUCHONS PROTECTIONS ACIERS","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":500},{"c":"E8-024","d":"CALES 50MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":8},{"c":"E8-025","d":"CALES 20MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":51},{"c":"E8-026","d":"CALES 10MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":51},{"c":"E8-027","d":"CAPUCHONS PLASTIQUE TIGES ARTEONS","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":150},{"c":"E8-028","d":"CÔNES BÉTON 190MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":30},{"c":"E8-029","d":"CONES PVC 200MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":80},{"c":"E8-030","d":"CALES 1CM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":50},{"c":"E8-031","d":"CALES 2CM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":175},{"c":"E8-032","d":"CHEVILLES IOMMET METAL 120MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":260},{"c":"E8-033","d":"CHEVILLES IOMMET PLASTIQUE 160MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":200},{"c":"E8-034","d":"BOUCHONS BANCHETTE 20MM","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":150},{"c":"E8-035","d":"TALONNETTE BANCHE 20 / POSI BANCHE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":50},{"c":"E8-036","d":"TALONNETTE BANCHE 18 / POSI BANCHE","e":"ÉTAGÈRE 8","u":"PCS","k":"","s":65}],"chantiers":["ATELIER / DÉPÔT"],"personnel":[]};
+var KEY = "magasin.v1";
+var S, view = "prendre", shelf = null, histFilter = "todo", sheetState = null, pendingSend = null;
+
+/* ---------- état ---------- */
+function fresh() {
+  return { lists: DEFAULT || { date: "", articles: [], chantiers: [], personnel: [] }, importTs: 0,
+           mvts: [], panier: [], set: { pin: "1234", email: "", title: "", base: "", lastQui: "", lastCha: "" } };
+}
+function load() {
+  try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.lists) return s; } catch (e) {}
+  return null;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch (e) { toast("Mémoire du téléphone pleine : envoyez au bureau puis purgez l'historique."); }
+  badges();
+}
+S = load() || fresh();
+if (!S.set) S.set = fresh().set;
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+
+/* ---------- outils ---------- */
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function norm(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); }
+function num(s) { var n = parseFloat(String(s).replace(",", ".")); return isNaN(n) ? null : n; }
+function fmt(n) { if (n == null || isNaN(n)) return "—"; return (Math.round(n * 100) / 100).toString().replace(".", ","); }
+function pad(n) { return (n < 10 ? "0" : "") + n; }
+function dstr(ts) { var d = new Date(ts); return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+function hstr(ts) { var d = new Date(ts); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+function art(code) { code = norm(code).trim(); return S.lists.articles.find(function (a) { return norm(a.c) === code; }); }
+function stockOf(a) {
+  var s = num(a.s); if (s == null) return null;
+  S.mvts.forEach(function (m) { if (m.ts > S.importTs && m.c === a.c) s += m.t === "RETOUR" ? m.q : -m.q; });
+  return s;
+}
+var toastT;
+function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2600); }
+function unsent() { return S.mvts.filter(function (m) { return !m.sent; }); }
+
+/* ---------- navigation ---------- */
+function go(v) {
+  view = v;
+  document.querySelectorAll(".view").forEach(function (e) { e.classList.toggle("on", e.id === "v-" + v); });
+  document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === v || (v === "reglages" || v === "etiq" || v === "aide") && b.dataset.v === "plus"); });
+  render(); window.scrollTo(0, 0);
+}
+function render() {
+  renderTop(); badges();
+  if (view === "prendre") { renderShelves(); renderList(); renderPending(); }
+  if (view === "panier") renderCart();
+  if (view === "histo") renderHist();
+  if (view === "plus") renderSend();
+  if (view === "reglages") renderSettings();
+  if (view === "etiq") renderLabels();
+}
+function renderTop() {
+  document.getElementById("appTitle").textContent = S.set.title || "MAGASIN";
+  document.getElementById("listInfo").textContent = S.lists.articles.length + " articles" + (S.lists.date ? " · listes du " + S.lists.date : "");
+}
+function badges() {
+  var n = S.panier.length, u = unsent().length;
+  document.getElementById("cartCount").textContent = n;
+  var c2 = document.getElementById("cartCount2"); c2.textContent = n; c2.style.display = n ? "" : "none";
+  var sc = document.getElementById("sendCount"); sc.textContent = u; sc.style.display = u ? "" : "none";
+}
+
+/* ---------- prendre ---------- */
+function shelves() {
+  var seen = {}, out = [];
+  S.lists.articles.forEach(function (a) { if (a.e && !seen[a.e]) { seen[a.e] = 1; out.push(a.e); } });
+  return out.sort(function (x, y) { return x.localeCompare(y, "fr", { numeric: true }); });
+}
+function renderShelves() {
+  document.getElementById("shelves").innerHTML = shelves().map(function (e) {
+    return '<button class="chip' + (shelf === e ? " on" : "") + '" onclick="shelf=(shelf===this.dataset.e?null:this.dataset.e);renderShelves();renderList()" data-e="' + esc(e) + '">' + esc(e.replace("ÉTAGÈRE", "Étag.")) + "</button>";
+  }).join("");
+}
+function itemHtml(a) {
+  var s = stockOf(a);
+  return '<button class="item" onclick="openSheet(this.dataset.c)" data-c="' + esc(a.c) + '"><span class="code">' + esc(a.c) + '</span><span style="min-width:0"><div class="des">' + esc(a.d) +
+    '</div><div class="meta">' + esc(a.e) + (a.k ? " · " + esc(a.k) : "") + '</div></span><span class="stock">' + fmt(s) + "<small>" + esc(a.u || "") + "</small></span></button>";
+}
+function renderList() {
+  var q = norm(document.getElementById("q").value).trim(), el = document.getElementById("results");
+  if (!S.lists.articles.length) { el.innerHTML = '<div class="card empty">Aucun article. Importez les listes dans Plus › Réglages.</div>'; return; }
+  if (!q && !shelf) {
+    var seen = {}, rec = [];
+    S.mvts.slice().sort(function (a, b) { return b.ts - a.ts; }).forEach(function (m) { if (rec.length < 8 && !seen[m.c] && art(m.c)) { seen[m.c] = 1; rec.push(art(m.c)); } });
+    el.innerHTML = rec.length ? '<div class="sec">Pris récemment</div><div class="list">' + rec.map(itemHtml).join("") + "</div>" : '<div class="empty">Tapez un mot ou choisissez une étagère.</div>';
+    return;
+  }
+  var toks = q.split(/\s+/).filter(Boolean);
+  var res = S.lists.articles.filter(function (a) {
+    if (shelf && a.e !== shelf) return false;
+    var h = norm(a.c + " " + a.d + " " + a.k);
+    return toks.every(function (t) { return h.indexOf(t) >= 0; });
+  });
+  el.innerHTML = res.length ? '<div class="list">' + res.slice(0, 120).map(itemHtml).join("") + "</div>" + (res.length > 120 ? '<div class="empty">… affinez la recherche</div>' : "") : '<div class="empty">Aucun article trouvé.</div>';
+}
+function renderPending() {
+  var u = unsent().length, days = 0;
+  if (u) { var oldest = Math.min.apply(null, unsent().map(function (m) { return m.ts; })); days = Math.floor((Date.now() - oldest) / 864e5); }
+  document.getElementById("pendingBanner").innerHTML = days >= 7 ? '<div class="banner">' + u + " saisies pas encore envoyées au bureau depuis " + days + ' jours. <a href="#" onclick="go(\'plus\');return false">Envoyer</a></div>' : "";
+}
+
+/* ---------- fiche article ---------- */
+function openSheet(code) {
+  var a = art(code);
+  if (!a) { toast("Article " + code + " inconnu : mettez à jour les listes"); return; }
+  sheetState = { c: a.c, t: "SORTIE", q: 1 };
+  drawSheet();
+  document.getElementById("veil").classList.add("on");
+  document.getElementById("sheet").classList.add("on");
+}
+function drawSheet() {
+  var a = art(sheetState.c), s = stockOf(a), st = sheetState;
+  document.getElementById("sheet").innerHTML =
+    '<div class="row"><span class="code">' + esc(a.c) + '</span><span class="meta">' + esc(a.e) + '</span><button class="x" style="margin-left:auto;color:var(--mute)" onclick="closeSheet()" aria-label="Fermer">×</button></div>' +
+    '<div class="des">' + esc(a.d) + "</div>" +
+    '<div class="meta">' + esc(a.u || "") + (a.k ? " · " + esc(a.k) : "") + " · stock ≈ <b>" + fmt(s) + "</b></div>" +
+    '<div class="seg"><button class="out' + (st.t === "SORTIE" ? " on" : "") + '" onclick="sheetState.t=\'SORTIE\';drawSheet()">Je prends</button><button class="in' + (st.t === "RETOUR" ? " on" : "") + '" onclick="sheetState.t=\'RETOUR\';drawSheet()">Je rapporte</button></div>' +
+    '<div class="qty"><button onclick="stepQ(-1)" aria-label="Moins">−</button><input id="sq" inputmode="decimal" value="' + fmt(st.q) + '" onfocus="this.select()" oninput="sheetState.q=num(this.value)"><button onclick="stepQ(1)" aria-label="Plus">+</button></div>' +
+    '<div class="quick">' + [1, 2, 5, 10, 25].map(function (n) { return '<button onclick="sheetState.q=' + n + ';document.getElementById(\'sq\').value=' + n + '">' + n + "</button>"; }).join("") + "</div>" +
+    '<button class="big primary" onclick="addCart()">' + (st.t === "SORTIE" ? "Ajouter au panier" : "Ajouter le retour au panier") + "</button>";
+}
+function stepQ(d) { var q = (num(document.getElementById("sq").value) || 0) + d; if (q < 0) q = 0; sheetState.q = q; document.getElementById("sq").value = fmt(q); }
+function closeSheet() { document.getElementById("veil").classList.remove("on"); document.getElementById("sheet").classList.remove("on"); sheetState = null; }
+function addCart() {
+  var q = num(document.getElementById("sq").value);
+  if (!q || q <= 0) { toast("Indiquez une quantité"); return; }
+  var st = sheetState, ex = S.panier.find(function (p) { return p.c === st.c && p.t === st.t; });
+  if (ex) ex.q += q; else S.panier.push({ c: st.c, t: st.t, q: q });
+  save(); closeSheet();
+  toast("Ajouté : " + fmt(q) + " × " + art(st.c).d);
+  if (view === "panier") renderCart();
+}
+
+/* ---------- panier ---------- */
+var selCha = null, selQui = null;
+function renderCart() {
+  var el = document.getElementById("cartList"), f = document.getElementById("cartForm");
+  if (!S.panier.length) { el.innerHTML = '<div class="card empty">Panier vide.<br><br><button class="big navybtn small" onclick="go(\'prendre\')">Chercher un article</button></div>'; f.style.display = "none"; return; }
+  f.style.display = "";
+  el.innerHTML = '<div class="list">' + S.panier.map(function (p, i) {
+    var a = art(p.c) || { d: p.c, u: "" };
+    return '<div class="line"><div class="grow"><div><span class="tag ' + (p.t === "SORTIE" ? "out" : "in") + '">' + (p.t === "SORTIE" ? "prise" : "retour") + '</span> <span class="code">' + esc(p.c) + '</span></div><div class="des">' + esc(a.d) + '</div></div>' +
+      '<div class="mini"><button onclick="cartStep(' + i + ',-1)">−</button><input inputmode="decimal" value="' + fmt(p.q) + '" onchange="cartSet(' + i + ',this.value)"><button onclick="cartStep(' + i + ',1)">+</button></div>' +
+      '<button class="x" onclick="cartDel(' + i + ')" aria-label="Retirer">×</button></div>';
+  }).join("") + "</div>";
+  if (selCha === null && S.set.lastCha) selCha = S.set.lastCha;
+  var chas = S.lists.chantiers.slice();
+  if (S.set.lastCha) chas = [S.set.lastCha].concat(chas.filter(function (c) { return c !== S.set.lastCha; }));
+  document.getElementById("chaPick").innerHTML = chas.map(function (c) { return '<button class="' + (selCha === c ? "on" : "") + '" data-v="' + esc(c) + '" onclick="pickCha(this.dataset.v)">' + esc(c) + "</button>"; }).join("") || '<div class="hint">Aucun chantier dans la liste : saisir ci-dessous.</div>';
+  var pers = S.lists.personnel;
+  document.getElementById("quiPick").innerHTML = pers.map(function (c) { return '<button class="' + (selQui === c ? "on" : "") + '" data-v="' + esc(c) + '" onclick="pickQui(this.dataset.v)">' + esc(c) + "</button>"; }).join("") || '<div class="hint">Aucun nom dans la liste : saisir ci-dessous.</div>';
+  checkValid();
+}
+function pickCha(v) { if (v !== null) { selCha = v; document.getElementById("chaOther").value = ""; } else selCha = null; renderCart(); }
+function pickQui(v) { if (v !== null) { selQui = v; document.getElementById("quiOther").value = ""; } else selQui = null; renderCart(); }
+function curCha() { var o = document.getElementById("chaOther").value.trim().toUpperCase(); return o || selCha; }
+function curQui() { var o = document.getElementById("quiOther").value.trim(); return o || selQui; }
+function checkValid() {
+  var ok = S.panier.length && curCha() && curQui();
+  var b = document.getElementById("validBtn"); b.disabled = !ok;
+  b.textContent = ok ? "Valider (" + S.panier.length + " article" + (S.panier.length > 1 ? "s" : "") + ")" : (!curCha() ? "Choisir le chantier" : "Choisir le nom");
+}
+document.addEventListener("input", function (e) { if (e.target.id === "chaOther" || e.target.id === "quiOther") checkValid(); });
+function cartStep(i, d) { var p = S.panier[i]; p.q = Math.max(0, p.q + d); if (!p.q) S.panier.splice(i, 1); save(); renderCart(); }
+function cartSet(i, v) { var q = num(v); if (q == null || q <= 0) S.panier.splice(i, 1); else S.panier[i].q = q; save(); renderCart(); }
+function cartDel(i) { S.panier.splice(i, 1); save(); renderCart(); }
+function clearCart() { if (confirm("Vider le panier ?")) { S.panier = []; save(); renderCart(); } }
+function validate() {
+  var cha = curCha(), qui = curQui(), com = document.getElementById("com").value.trim(), ts = Date.now();
+  if (!S.panier.length || !cha || !qui) return;
+  S.panier.forEach(function (p, i) {
+    S.mvts.push({ id: ts + "-" + i + "-" + Math.random().toString(36).slice(2, 6), ts: ts, t: p.t, c: p.c, q: p.q, cha: cha, qui: qui, com: com, sent: 0 });
+  });
+  var n = S.panier.length;
+  S.set.lastCha = cha; S.set.lastQui = qui; S.panier = [];
+  selCha = null; selQui = null;
+  ["chaOther", "quiOther", "com"].forEach(function (id) { document.getElementById(id).value = ""; });
+  save();
+  document.getElementById("doneTxt").textContent = n + " ligne" + (n > 1 ? "s" : "") + " · " + cha + " · " + qui;
+  var d = document.getElementById("done"); d.classList.add("on");
+  setTimeout(function () { d.classList.remove("on"); }, 2200);
+  document.getElementById("q").value = ""; shelf = null;
+  go("prendre");
+}
+
+/* ---------- historique ---------- */
+function renderHist() {
+  document.getElementById("hfTodo").classList.toggle("on", histFilter === "todo");
+  document.getElementById("hfAll").classList.toggle("on", histFilter === "all");
+  var list = S.mvts.filter(function (m) { return histFilter === "all" || !m.sent; }).slice().sort(function (a, b) { return b.ts - a.ts; }).slice(0, 400);
+  var el = document.getElementById("histList");
+  if (!list.length) { el.innerHTML = '<div class="card empty">' + (histFilter === "todo" ? "Rien à envoyer." : "Aucune saisie.") + "</div>"; return; }
+  var html = "", day = "";
+  list.forEach(function (m) {
+    var d = dstr(m.ts);
+    if (d !== day) { if (day) html += "</div>"; html += '<div class="sec">' + d + '</div><div class="list">'; day = d; }
+    var a = art(m.c);
+    html += '<div class="line"><div class="grow"><div><span class="tag ' + (m.t === "SORTIE" ? "out" : "in") + '">' + (m.t === "SORTIE" ? "prise" : "retour") + "</span> <b>" + fmt(m.q) + "</b> × " + esc(a ? a.d : m.c) +
+      '</div><div class="meta">' + hstr(m.ts) + " · " + esc(m.qui) + " · " + esc(m.cha) + (m.com ? " · " + esc(m.com) : "") + "</div></div>" +
+      (m.sent ? '<span class="tag done">envoyé</span>' : '<span class="tag todo">à envoyer</span><button class="x" onclick="delMvt(\'' + m.id + '\')" aria-label="Supprimer">×</button>') + "</div>";
+  });
+  el.innerHTML = html + "</div>";
+}
+function delMvt(id) {
+  var m = S.mvts.find(function (x) { return x.id === id; }); if (!m || m.sent) return;
+  var a = art(m.c);
+  var go2 = function () {
+    if (!confirm("Supprimer : " + fmt(m.q) + " × " + (a ? a.d : m.c) + " (" + m.qui + ") ?")) return;
+    S.mvts = S.mvts.filter(function (x) { return x.id !== id; }); save(); renderHist();
+  };
+  if (Date.now() - m.ts < 15 * 60e3) go2(); else askPin(go2, "Ligne de plus de 15 minutes : code responsable");
+}
+
+/* ---------- envoi au bureau ---------- */
+function rows(list) {
+  return list.slice().sort(function (a, b) { return a.ts - b.ts; }).map(function (m) {
+    var clean = function (s) { return String(s || "").replace(/[\t\r\n;]+/g, " ").trim(); };
+    return [dstr(m.ts), m.t, m.c, fmt(m.q), clean(m.cha), clean(m.qui), clean("[tél. " + hstr(m.ts) + "]" + (m.com ? " " + m.com : ""))];
+  });
+}
+function fileName() { var d = new Date(); return "magasin_" + d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "_" + pad(d.getHours()) + "h" + pad(d.getMinutes()) + ".csv"; }
+function csvOf(list) { return "﻿Date;Type;Code article;Quantité;Chantier / destination;Saisi par;Commentaire\r\n" + rows(list).map(function (r) { return r.join(";"); }).join("\r\n") + "\r\n"; }
+function tsvOf(list) { return rows(list).map(function (r) { return r.join("\t"); }).join("\n"); }
+function renderSend() {
+  var u = unsent(), el = document.getElementById("sendCard");
+  if (!u.length && !pendingSend) {
+    var last = S.mvts.filter(function (m) { return m.sent; }).reduce(function (a, m) { return Math.max(a, m.sentAt || 0); }, 0);
+    el.innerHTML = '<div class="banner ok" style="margin:0">Tout est envoyé.' + (last ? " Dernier envoi le " + dstr(last) + " à " + hstr(last) + "." : "") + "</div>" + resendHtml();
+    return;
+  }
+  if (!pendingSend) pendingSend = u.map(function (m) { return m.id; });
+  var list = S.mvts.filter(function (m) { return pendingSend.indexOf(m.id) >= 0; });
+  el.innerHTML = '<div><b>' + list.length + " ligne" + (list.length > 1 ? "s" : "") + "</b> à envoyer (du " + dstr(Math.min.apply(null, list.map(function (m) { return m.ts; }))) + " au " + dstr(Math.max.apply(null, list.map(function (m) { return m.ts; }))) + ")</div>" +
+    '<button class="big primary" onclick="shareFile(false)">Partager le fichier (mail, WhatsApp…)</button>' +
+    '<div class="row"><button class="big ghost small" style="flex:1" onclick="copyTsv(false)">Copier le texte</button><button class="big ghost small" style="flex:1" onclick="downloadCsv(false)">Télécharger</button>' +
+    (S.set.email ? '<button class="big ghost small" style="flex:1" onclick="mailTo()">E-mail</button>' : "") + "</div>" +
+    '<div class="hint">Une fois le message parti :</div>' +
+    '<button class="big navybtn" onclick="markSent()">Marquer comme envoyé</button>' + resendHtml();
+}
+function resendHtml() {
+  return '<details style="margin-top:6px"><summary class="hint">Renvoyer une période déjà envoyée</summary><div class="row" style="margin-top:8px"><input class="field" type="date" id="resFrom"><button class="big ghost small" style="width:auto" onclick="resend()">Partager</button></div></details>';
+}
+function pendingList() { return S.mvts.filter(function (m) { return pendingSend && pendingSend.indexOf(m.id) >= 0; }); }
+function fileOf(list) { return new File([csvOf(list)], fileName(), { type: "text/csv" }); }
+async function shareFile(list) {
+  list = list || pendingList();
+  var f = fileOf(list);
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Sorties magasin", text: "Sorties magasin – " + list.length + " lignes" }); return; }
+    if (navigator.share) { await navigator.share({ title: "Sorties magasin", text: tsvOf(list) }); return; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  downloadCsv(list); toast("Partage indisponible : fichier téléchargé");
+}
+function downloadCsv(list) {
+  list = list || pendingList();
+  var f = fileOf(list), a = document.createElement("a");
+  a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function copyTsv(list) {
+  list = list || pendingList();
+  var t = tsvOf(list);
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast("Copié : à coller dans MOUVEMENTS, colonne A"); }, function () {
+    var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast("Copié");
+  });
+}
+function mailTo() {
+  var list = pendingList(), body = "Lignes à coller dans MOUVEMENTS (colonne A, première ligne vide) :\n\n" + tsvOf(list);
+  if (body.length > 1800) { toast("Trop de lignes pour un e-mail direct : utilisez « Partager le fichier »"); return; }
+  location.href = "mailto:" + encodeURIComponent(S.set.email) + "?subject=" + encodeURIComponent("Sorties magasin " + dstr(Date.now())) + "&body=" + encodeURIComponent(body);
+}
+function markSent() {
+  var now = Date.now(), n = 0;
+  S.mvts.forEach(function (m) { if (pendingSend && pendingSend.indexOf(m.id) >= 0) { m.sent = 1; m.sentAt = now; n++; } });
+  pendingSend = null; save(); renderSend(); toast(n + " lignes marquées comme envoyées");
+}
+function resend() {
+  var v = document.getElementById("resFrom").value; if (!v) { toast("Choisissez une date"); return; }
+  var from = new Date(v + "T00:00:00").getTime(), list = S.mvts.filter(function (m) { return m.ts >= from; });
+  if (!list.length) { toast("Aucune saisie depuis cette date"); return; }
+  shareFile(list);
+}
+
+/* ---------- code d'accès ---------- */
+function askPin(cb, label) {
+  var ok = sessionStorage.getItem("magasin.unlock");
+  if (ok && Date.now() - +ok < 10 * 60e3) { cb(); return; }
+  var p = prompt((label || "Code responsable") + " :");
+  if (p === null) return;
+  if (p === String(S.set.pin || "1234")) { sessionStorage.setItem("magasin.unlock", Date.now()); cb(); }
+  else toast("Code incorrect");
+}
+function openSettings() { askPin(function () { go("reglages"); }); }
+function openLabels() { go("etiq"); }
+
+/* ---------- réglages ---------- */
+function renderSettings() {
+  var L = S.lists;
+  document.getElementById("listStats").innerHTML = "<b>Articles</b><span>" + L.articles.length + "</span><b>Chantiers</b><span>" + L.chantiers.length + "</span><b>Personnel</b><span>" + L.personnel.length + "</span><b>Listes du</b><span>" + esc(L.date || "—") + "</span>";
+  ["personnel", "chantiers"].forEach(function (k) {
+    document.getElementById(k === "personnel" ? "perList" : "chaList").innerHTML = L[k].length ? '<div class="list">' + L[k].map(function (v, i) {
+      return '<div class="line"><div class="grow">' + esc(v) + '</div><button class="x" onclick="delFrom(\'' + k + "'," + i + ')" aria-label="Retirer">×</button></div>';
+    }).join("") + "</div>" : '<div class="hint">Liste vide.</div>';
+  });
+  document.getElementById("mail").value = S.set.email || "";
+  document.getElementById("appName").value = S.set.title || "";
+}
+function addTo(k, id) {
+  var el = document.getElementById(id), v = el.value.trim(); if (!v) return;
+  if (k === "chantiers") v = v.toUpperCase();
+  if (S.lists[k].indexOf(v) < 0) S.lists[k].push(v);
+  el.value = ""; save(); renderSettings();
+}
+function delFrom(k, i) { if (confirm("Retirer « " + S.lists[k][i] + " » ?")) { S.lists[k].splice(i, 1); save(); renderSettings(); } }
+function parseBlock(txt) {
+  var out = { date: "", articles: [], chantiers: [], personnel: [] }, seen = {};
+  String(txt || "").replace(/^﻿/, "").split(/\r?\n/).forEach(function (raw) {
+    var l = raw.trim(); if (!l) return;
+    if (l.charAt(0) === '"' && l.charAt(l.length - 1) === '"') l = l.slice(1, -1).replace(/""/g, '"');
+    l = l.replace(/;+$/, "");
+    var p = l.split("|").map(function (x) { return x.trim(); });
+    if (p[0] === "#MAGASIN") out.date = p[1] || "";
+    else if (p[0] === "ART" && p[1] && !seen[p[1]]) { seen[p[1]] = 1; out.articles.push({ c: p[1], d: p[2] || "", e: p[3] || "", u: p[4] || "", k: p[5] || "", s: p[6] === undefined || p[6] === "" ? null : num(p[6]) }); }
+    else if (p[0] === "CHA" && p[1]) out.chantiers.push(p[1]);
+    else if (p[0] === "PER" && p[1]) out.personnel.push(p[1]);
+  });
+  return out;
+}
+function doImport(txt) {
+  var r = parseBlock(txt);
+  if (!r.articles.length) { toast("Aucun article reconnu : copiez bien le bloc de l'onglet TELEPHONE"); return; }
+  var used = {};
+  S.mvts.forEach(function (m) { if (Date.now() - m.ts < 30 * 864e5) used[m.cha] = 1; });
+  var lost = Object.keys(used).filter(function (c) { return r.chantiers.indexOf(c) < 0; });
+  if (!confirm("Importer " + r.articles.length + " articles, " + r.chantiers.length + " chantiers, " + r.personnel.length + " noms ?\nLes listes actuelles seront remplacées." + (unsent().length ? "\n\nAttention : " + unsent().length + " saisies ne sont pas encore envoyées. Le stock affiché repartira du stock importé." : ""))) return;
+  S.lists = r; S.importTs = Date.now(); save();
+  document.getElementById("importTxt").value = "";
+  toast("Listes mises à jour" + (lost.length ? " (chantiers récents absents : " + lost.join(", ") + ")" : ""));
+  renderSettings();
+}
+function importFile(inp) {
+  var f = inp.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () { doImport(rd.result); inp.value = ""; };
+  rd.readAsText(f, "utf-8");
+}
+function changePin() {
+  var v = document.getElementById("pinNew").value.trim();
+  if (!/^\d{4,8}$/.test(v)) { toast("4 à 8 chiffres"); return; }
+  S.set.pin = v; save(); document.getElementById("pinNew").value = ""; toast("Code changé");
+}
+function backup() {
+  var b = new Blob([JSON.stringify(S)], { type: "application/json" }), a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = "magasin_sauvegarde_" + dstr(Date.now()).split("/").reverse().join("-") + ".json"; a.click();
+}
+function restore(inp) {
+  var f = inp.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () {
+    try { var s = JSON.parse(rd.result); if (!s.lists || !s.mvts) throw 0; if (confirm("Remplacer toutes les données de ce téléphone par la sauvegarde (" + s.mvts.length + " saisies) ?")) { S = s; save(); toast("Sauvegarde restaurée"); go("plus"); } }
+    catch (e) { toast("Fichier de sauvegarde invalide"); }
+    inp.value = "";
+  };
+  rd.readAsText(f);
+}
+function purge() {
+  var lim = Date.now() - 90 * 864e5, n = S.mvts.filter(function (m) { return m.sent && m.ts < lim; }).length;
+  if (!n) { toast("Rien à supprimer"); return; }
+  if (confirm("Supprimer " + n + " lignes envoyées de plus de 90 jours ?")) { S.mvts = S.mvts.filter(function (m) { return !(m.sent && m.ts < lim); }); save(); toast("Supprimé"); }
+}
+function wipe() {
+  if (unsent().length && !confirm(unsent().length + " saisies ne sont PAS envoyées. Continuer quand même ?")) return;
+  if (confirm("Tout effacer sur ce téléphone (saisies, listes, réglages) ?")) { localStorage.removeItem(KEY); S = fresh(); save(); go("prendre"); }
+}
+
+/* ---------- étiquettes ---------- */
+function baseUrl() {
+  if (S.set.base) return S.set.base;
+  return location.protocol.indexOf("http") === 0 ? location.origin + location.pathname.replace(/index\.html$/, "") : "";
+}
+function renderLabels() {
+  var sel = document.getElementById("labShelf"), cur = sel.value;
+  sel.innerHTML = '<option value="">Toutes les étagères</option>' + shelves().map(function (e) { return '<option' + (e === cur ? " selected" : "") + ">" + esc(e) + "</option>"; }).join("");
+  var b = baseUrl();
+  document.getElementById("labBase").value = b;
+  document.getElementById("labWarn").textContent = b ? "" : "Ouvrez l'appli depuis son adresse en ligne (https://…) ou saisissez l'adresse ci-dessus : sinon le QR ne contiendra que le code article.";
+  var list = S.lists.articles.filter(function (a) { return !sel.value || a.e === sel.value; });
+  var pages = [];
+  for (var i = 0; i < list.length; i += 24) pages.push(list.slice(i, i + 24));
+  var html = pages.map(function (pg) {
+    return '<div class="lbl-page">' + pg.map(function (a) {
+      var txt = b ? b + (b.indexOf("?") >= 0 ? "&" : "?") + "a=" + encodeURIComponent(a.c) : a.c, q;
+      try { q = QR.svg(txt); } catch (e) { q = "<div>QR trop long</div>"; }
+      return '<div class="lbl">' + q + '<div class="t"><div class="c">' + esc(a.c) + '</div><div class="d">' + esc(a.d) + '</div><div class="e">' + esc(a.e) + " · " + esc(a.u) + (a.k ? " · " + esc(a.k) : "") + "</div></div></div>";
+    }).join("") + "</div>";
+  }).join("");
+  var w = document.getElementById("labels");
+  w.style.display = "block";
+  w.innerHTML = html || '<div class="empty">Aucun article.</div>';
+  var avail = w.clientWidth - 24, mm = 793.7; // 210 mm en px CSS
+  var sc = Math.min(1, avail / mm);
+  w.querySelectorAll(".lbl-page").forEach(function (p) { p.style.transform = sc < 1 ? "scale(" + sc + ")" : ""; p.style.marginBottom = sc < 1 ? (-1122.5 * (1 - sc) + 12) + "px" : ""; });
+}
+
+/* ---------- scan ---------- */
+var stream = null, scanTimer = null, detector = null;
+async function initScan() {
+  var b = document.getElementById("scanBtn"), h = document.getElementById("scanHint");
+  try {
+    if ("BarcodeDetector" in window && navigator.mediaDevices) {
+      var f = await BarcodeDetector.getSupportedFormats();
+      if (f.indexOf("qr_code") >= 0) { detector = new BarcodeDetector({ formats: ["qr_code"] }); b.style.display = ""; return; }
+    }
+  } catch (e) {}
+  h.style.display = "";
+}
+async function startScan() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+  } catch (e) { toast("Caméra refusée : autorisez-la dans le navigateur"); return; }
+  var v = document.getElementById("video"); v.srcObject = stream; await v.play();
+  document.getElementById("scan").classList.add("on");
+  scanTimer = setInterval(async function () {
+    try {
+      var r = await detector.detect(v);
+      if (r && r.length) { var code = codeFrom(r[0].rawValue); stopScan(); if (navigator.vibrate) navigator.vibrate(60); openSheet(code); }
+    } catch (e) {}
+  }, 250);
+}
+function stopScan() {
+  clearInterval(scanTimer); scanTimer = null;
+  if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null;
+  document.getElementById("scan").classList.remove("on");
+}
+function codeFrom(raw) {
+  raw = String(raw || "").trim();
+  try { var u = new URL(raw); var a = u.searchParams.get("a"); if (a) return a; } catch (e) {}
+  return raw;
+}
+
+/* ---------- démarrage ---------- */
+window.addEventListener("storage", function (e) { if (e.key === KEY) { S = load() || S; render(); } });
+document.addEventListener("visibilitychange", function () { if (!document.hidden) { var s = load(); if (s) S = s; render(); } });
+initScan();
+render();
+(function () {
+  var a = new URLSearchParams(location.search).get("a");
+  if (a) { history.replaceState(null, "", location.pathname); setTimeout(function () { openSheet(a); }, 50); }
+})();
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});
+</script>
+</body>
+</html>
